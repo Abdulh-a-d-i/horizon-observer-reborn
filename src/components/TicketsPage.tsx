@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,11 +53,11 @@ const TicketsPage = () => {
   const fetchTickets = async () => {
     try {
       const response = await fetch('http://localhost:8000/tickets');
-      const data = await response.json();
+      const data: Ticket[] = await response.json();
       setTickets(data);
       
-      // Extract unique machines
-      const uniqueMachines = [...new Set(data.map((ticket: Ticket) => ticket.machine_id))];
+      // Extract unique machines with proper typing
+      const uniqueMachines: string[] = [...new Set(data.map((ticket: Ticket) => ticket.machine_id))];
       setMachines(uniqueMachines);
     } catch (error) {
       console.error('Error fetching tickets:', error);
