@@ -1,20 +1,20 @@
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from pydantic import BaseModel
-import subprocess
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from logger import tail_log_file
 import socket
+import json
+import random
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,30 +29,82 @@ def get_machine_id():
     except:
         return "unknown-machine"
 
+# Sample log messages for simulation
+SAMPLE_LOGS = [
+    "ERROR: Database connection timeout after 30 seconds",
+    "WARNING: High memory usage detected: 85% of available RAM",
+    "CRITICAL: Disk space low on /var partition: 95% full",
+    "ERROR: Failed to authenticate user: invalid credentials",
+    "WARNING: API response time exceeded threshold: 2.5s",
+    "ERROR: Network connection lost to service mesh",
+    "CRITICAL: Service health check failed 3 consecutive times",
+    "WARNING: Cache hit ratio below optimal: 45%",
+    "ERROR: Failed to parse configuration file",
+    "WARNING: SSL certificate expires in 7 days"
+]
+
+SEVERITIES = ["ERROR", "WARNING", "CRITICAL", "INFO"]
+MACHINES = ["web-server-01", "api-server-02", "db-server-01", "cache-server-01", "load-balancer-01"]
+
+async def generate_sample_logs():
+    """Generate sample logs for demonstration"""
+    while True:
+        if active_connections:
+            # Generate a random log entry
+            log_entry = {
+                "machine_id": random.choice(MACHINES),
+                "log": random.choice(SAMPLE_LOGS),
+                "timestamp": datetime.now().isoformat(),
+                "severity": random.choice(SEVERITIES),
+                "source": "system"
+            }
+            
+            # Send to all connected clients
+            disconnected = []
+            for connection in active_connections:
+                try:
+                    await connection.send_text(json.dumps(log_entry))
+                except:
+                    disconnected.append(connection)
+            
+            # Remove disconnected clients
+            for conn in disconnected:
+                if conn in active_connections:
+                    active_connections.remove(conn)
+        
+        # Wait before generating next log (random interval between 1-5 seconds)
+        await asyncio.sleep(random.uniform(1, 5))
+
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
-    machine_id = get_machine_id()
+    print(f"Client connected. Total connections: {len(active_connections)}")
 
     try:
-        # Start sending logs
-        async for log_line in tail_log_file():
-            log_entry = {
-                "machine_id": machine_id,
-                "log": log_line,
-                "timestamp": datetime.now().isoformat(),
-                "severity": "ERROR" if "ERROR" in log_line.upper() else "WARNING" if "WARNING" in log_line.upper() else "CRITICAL"
-            }
-            
-            # Send the log to the connected client
-            await websocket.send_json(log_entry)
-            
+        # Keep connection alive and listen for client messages
+        while True:
+            try:
+                # Wait for client message or timeout after 30 seconds
+                message = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                print(f"Received message from client: {message}")
+            except asyncio.TimeoutError:
+                # Send ping to keep connection alive
+                await websocket.send_text(json.dumps({"type": "ping"}))
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                print(f"Error in websocket: {e}")
+                break
+                
+    except WebSocketDisconnect:
+        print("Client disconnected")
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
-        active_connections.remove(websocket)
-        await websocket.close()
+        if websocket in active_connections:
+            active_connections.remove(websocket)
+        print(f"Client removed. Total connections: {len(active_connections)}")
 
 class Ticket(BaseModel):
     machine_id: str
@@ -81,14 +133,22 @@ async def create_ticket(ticket: Ticket):
     tickets_db.append(ticket_entry)
     
     # Broadcast new ticket to all connected clients
+    ticket_message = {
+        "type": "new_ticket",
+        "ticket": ticket_entry
+    }
+    
+    disconnected = []
     for connection in active_connections:
         try:
-            await connection.send_json({
-                "type": "new_ticket",
-                "ticket": ticket_entry
-            })
-        except Exception as e:
-            print(f"Error broadcasting ticket: {e}")
+            await connection.send_text(json.dumps(ticket_message))
+        except:
+            disconnected.append(connection)
+    
+    # Remove disconnected clients
+    for conn in disconnected:
+        if conn in active_connections:
+            active_connections.remove(conn)
     
     return {"message": "Ticket created successfully", "ticket_id": ticket_id}
 
@@ -107,3 +167,13 @@ async def update_ticket_status(ticket_id: str, status: str):
             ticket["status"] = status
             return {"message": "Ticket status updated successfully"}
     return {"message": "Ticket not found"}, 404
+
+@app.on_event("startup")
+async def startup_event():
+    # Start the log generation task
+    asyncio.create_task(generate_sample_logs())
+    print("FastAPI server started with sample log generation")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
