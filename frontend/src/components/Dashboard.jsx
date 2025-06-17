@@ -1,7 +1,8 @@
 
 import { useState } from "react";
-import NavBar from "./NavBar";
-import HomePage from "./HomePage";
+import Sidebar from "./Sidebar";
+import DashboardHeader from "./DashboardHeader";
+import DashboardContent from "./DashboardContent";
 import LogsPage from "./LogsPage";
 import TicketsPage from "./TicketsPage";
 import VisualizationPage from "./VisualizationPage";
@@ -12,7 +13,7 @@ const Dashboard = ({ onLogout }) => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <HomePage />;
+        return <DashboardContent />;
       case "logs":
         return <LogsPage />;
       case "tickets":
@@ -20,16 +21,19 @@ const Dashboard = ({ onLogout }) => {
       case "visualization":
         return <VisualizationPage />;
       default:
-        return <HomePage />;
+        return <DashboardContent />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
-      <main className="pt-16">
-        {renderContent()}
-      </main>
+    <div className="flex h-screen bg-slate-900">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <DashboardHeader />
+        <main className="flex-1 overflow-y-auto">
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 };
