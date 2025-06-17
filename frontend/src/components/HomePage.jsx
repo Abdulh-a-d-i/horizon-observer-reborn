@@ -1,189 +1,142 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Copy, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, AlertTriangle, CheckCircle, Clock, Server, Database } from "lucide-react";
 
 const HomePage = () => {
-  const [stats, setStats] = useState({
-    totalLogsToday: 0,
-    openTickets: 0,
+  const [systemMetrics, setSystemMetrics] = useState({
+    totalLogs: 0,
+    activeIncidents: 0,
     resolvedToday: 0,
-    avgResolutionTime: "0h"
+    systemUptime: "00:00:00"
   });
 
-  const [recentTickets, setRecentTickets] = useState([]);
-  const [systemHealth, setSystemHealth] = useState([]);
-
+  // Simulate real-time data updates
   useEffect(() => {
-    // Simulate fetching stats
-    setStats({
-      totalLogsToday: 1247,
-      openTickets: 23,
-      resolvedToday: 18,
-      avgResolutionTime: "2.4h"
-    });
+    const interval = setInterval(() => {
+      setSystemMetrics(prev => ({
+        totalLogs: prev.totalLogs + Math.floor(Math.random() * 5) + 1,
+        activeIncidents: Math.max(0, prev.activeIncidents + (Math.random() > 0.7 ? 1 : -1)),
+        resolvedToday: prev.resolvedToday + (Math.random() > 0.8 ? 1 : 0),
+        systemUptime: new Date().toLocaleTimeString()
+      }));
+    }, 3000);
 
-    // Simulate recent tickets
-    setRecentTickets([
-      {
-        id: "TKT-001",
-        title: "Database connection timeout",
-        priority: "high",
-        status: "open",
-        description: "Database connection timeout"
-      },
-      {
-        id: "TKT-002",
-        title: "API rate limit exceeded",
-        priority: "medium",
-        status: "in-progress",
-        description: "API rate limit exceeded"
-      },
-      {
-        id: "TKT-003",
-        title: "Memory leak in service",
-        priority: "high",
-        status: "open",
-        description: "Memory leak in service"
-      },
-      {
-        id: "TKT-004",
-        title: "Authentication failure",
-        priority: "low",
-        status: "resolved",
-        description: "Authentication failure"
-      }
-    ]);
-
-    // Simulate system health
-    setSystemHealth([
-      { name: "Log Ingestion Rate", status: "Normal" },
-      { name: "Error Detection", status: "Active" },
-      { name: "AI Assistant", status: "Online" },
-      { name: "Notification Queue", value: "3 pending" }
-    ]);
+    return () => clearInterval(interval);
   }, []);
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "low": return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+  const statsCards = [
+    {
+      title: "Total Logs Today",
+      value: systemMetrics.totalLogs.toLocaleString(),
+      icon: Activity,
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+    },
+    {
+      title: "Active Incidents",
+      value: systemMetrics.activeIncidents,
+      icon: AlertTriangle,
+      color: "text-red-600 dark:text-red-400",
+      bgColor: "bg-red-50 dark:bg-red-900/20"
+    },
+    {
+      title: "Resolved Today",
+      value: systemMetrics.resolvedToday,
+      icon: CheckCircle,
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-900/20"
+    },
+    {
+      title: "System Uptime",
+      value: systemMetrics.systemUptime,
+      icon: Clock,
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20"
     }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "open": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "in-progress": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "resolved": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-    }
-  };
-
-  const getHealthStatusColor = (status) => {
-    switch (status) {
-      case "Normal":
-      case "Active":
-      case "Online": return "bg-black text-white dark:bg-white dark:text-black";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-    }
-  };
+  ];
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-slate-900 min-h-screen">
+    <div className="p-6 space-y-6 bg-white dark:bg-slate-900 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">Overview of your logs and incidents</p>
+        <p className="text-gray-600 dark:text-slate-400">Monitor your system health and incidents</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Logs Today</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalLogsToday.toLocaleString()}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">+12% from yesterday</p>
-            </div>
-            <Copy className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Open Tickets</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.openTickets}</p>
-              <p className="text-xs text-red-600 dark:text-red-400">+3 from yesterday</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Resolved Today</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.resolvedToday}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">+15% from yesterday</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Resolution Time</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.avgResolutionTime}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">-0.3h from yesterday</p>
-            </div>
-            <Clock className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statsCards.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-slate-400">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                  <Icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
+      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Tickets */}
         <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Tickets</h2>
-          <div className="space-y-4">
-            {recentTickets.map((ticket) => (
-              <div key={ticket.id} className="border-b border-gray-200 dark:border-slate-600 pb-4 last:border-b-0">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{ticket.id}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{ticket.description}</p>
-                  </div>
-                  <div className="flex space-x-2 ml-4">
-                    <Badge className={getPriorityColor(ticket.priority)}>
-                      {ticket.priority}
-                    </Badge>
-                    <Badge className={getStatusColor(ticket.status)}>
-                      {ticket.status}
-                    </Badge>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Incidents</h2>
+          <div className="space-y-3">
+            {[
+              { type: "ERROR", message: "Database connection timeout", time: "2 min ago", status: "active" },
+              { type: "WARNING", message: "High memory usage detected", time: "5 min ago", status: "investigating" },
+              { type: "INFO", message: "System backup completed", time: "1 hour ago", status: "resolved" }
+            ].map((incident, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-700">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    incident.type === "ERROR" ? "bg-red-500" : 
+                    incident.type === "WARNING" ? "bg-yellow-500" : "bg-blue-500"
+                  }`} />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{incident.message}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">{incident.time}</p>
                   </div>
                 </div>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  incident.status === "active" ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
+                  incident.status === "investigating" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400" :
+                  "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                }`}>
+                  {incident.status}
+                </span>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* System Health */}
         <Card className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">System Health</h2>
           <div className="space-y-4">
-            {systemHealth.map((item, index) => (
+            {[
+              { name: "Web Server", status: "healthy", uptime: "99.9%" },
+              { name: "Database", status: "warning", uptime: "98.5%" },
+              { name: "Cache Layer", status: "healthy", uptime: "100%" },
+              { name: "API Gateway", status: "healthy", uptime: "99.8%" }
+            ].map((service, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">{item.name}</span>
-                <Badge className={getHealthStatusColor(item.status || item.value)}>
-                  {item.status || item.value}
-                </Badge>
+                <div className="flex items-center space-x-3">
+                  <Server className="h-4 w-4 text-gray-400 dark:text-slate-500" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{service.name}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">{service.uptime}</span>
+                  <div className={`w-2 h-2 rounded-full ${
+                    service.status === "healthy" ? "bg-green-500" : "bg-yellow-500"
+                  }`} />
+                </div>
               </div>
             ))}
           </div>

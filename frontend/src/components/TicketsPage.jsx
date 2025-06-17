@@ -36,10 +36,10 @@ const TicketsPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Open": return "text-red-400 bg-red-900/20";
-      case "In Progress": return "text-yellow-400 bg-yellow-900/20";
-      case "Resolved": return "text-green-400 bg-green-900/20";
-      default: return "text-gray-400 bg-gray-900/20";
+      case "Open": return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20";
+      case "In Progress": return "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20";
+      case "Resolved": return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20";
+      default: return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20";
     }
   };
 
@@ -54,13 +54,13 @@ const TicketsPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-slate-900 min-h-screen">
+    <div className="p-6 space-y-6 bg-white dark:bg-slate-900 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Support Tickets</h1>
         <p className="text-gray-600 dark:text-slate-400">Manage and track system issues</p>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-slate-700">
         <div className="p-6 border-b border-gray-200 dark:border-slate-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Tickets</h2>
         </div>
