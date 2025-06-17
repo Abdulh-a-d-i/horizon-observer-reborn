@@ -16,53 +16,81 @@ const HomePage = () => {
   const [systemHealth, setSystemHealth] = useState([]);
 
   useEffect(() => {
-    // Simulate fetching stats
-    setStats({
-      totalLogsToday: 1247,
-      openTickets: 23,
-      resolvedToday: 18,
-      avgResolutionTime: "2.4h"
-    });
+    // Simulate fetching stats with dynamic data
+    const fetchStats = () => {
+      setStats({
+        totalLogsToday: Math.floor(Math.random() * 2000) + 1000,
+        openTickets: Math.floor(Math.random() * 50) + 10,
+        resolvedToday: Math.floor(Math.random() * 30) + 5,
+        avgResolutionTime: `${(Math.random() * 5 + 1).toFixed(1)}h`
+      });
+    };
 
-    // Simulate recent tickets
-    setRecentTickets([
-      {
-        id: "TKT-001",
-        title: "Database connection timeout",
-        priority: "high",
-        status: "open",
-        description: "Database connection timeout"
-      },
-      {
-        id: "TKT-002",
-        title: "API rate limit exceeded",
-        priority: "medium",
-        status: "in-progress",
-        description: "API rate limit exceeded"
-      },
-      {
-        id: "TKT-003",
-        title: "Memory leak in service",
-        priority: "high",
-        status: "open",
-        description: "Memory leak in service"
-      },
-      {
-        id: "TKT-004",
-        title: "Authentication failure",
-        priority: "low",
-        status: "resolved",
-        description: "Authentication failure"
-      }
-    ]);
+    // Simulate recent tickets with dynamic data
+    const fetchRecentTickets = () => {
+      const ticketTypes = [
+        "Database connection timeout",
+        "API rate limit exceeded", 
+        "Memory leak in service",
+        "Authentication failure",
+        "SSL certificate expired",
+        "Disk space running low"
+      ];
+      
+      setRecentTickets([
+        {
+          id: "TKT-001",
+          title: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+          priority: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
+          status: ["open", "in-progress", "resolved"][Math.floor(Math.random() * 3)],
+          description: ticketTypes[Math.floor(Math.random() * ticketTypes.length)]
+        },
+        {
+          id: "TKT-002", 
+          title: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+          priority: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
+          status: ["open", "in-progress", "resolved"][Math.floor(Math.random() * 3)],
+          description: ticketTypes[Math.floor(Math.random() * ticketTypes.length)]
+        },
+        {
+          id: "TKT-003",
+          title: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+          priority: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
+          status: ["open", "in-progress", "resolved"][Math.floor(Math.random() * 3)],
+          description: ticketTypes[Math.floor(Math.random() * ticketTypes.length)]
+        },
+        {
+          id: "TKT-004",
+          title: ticketTypes[Math.floor(Math.random() * ticketTypes.length)],
+          priority: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
+          status: ["open", "in-progress", "resolved"][Math.floor(Math.random() * 3)],
+          description: ticketTypes[Math.floor(Math.random() * ticketTypes.length)]
+        }
+      ]);
+    };
 
-    // Simulate system health
-    setSystemHealth([
-      { name: "Log Ingestion Rate", status: "Normal" },
-      { name: "Error Detection", status: "Active" },
-      { name: "AI Assistant", status: "Online" },
-      { name: "Notification Queue", value: "3 pending" }
-    ]);
+    // Simulate system health with dynamic data
+    const fetchSystemHealth = () => {
+      setSystemHealth([
+        { name: "Log Ingestion Rate", status: Math.random() > 0.3 ? "Normal" : "Warning" },
+        { name: "Error Detection", status: Math.random() > 0.2 ? "Active" : "Inactive" },
+        { name: "AI Assistant", status: Math.random() > 0.1 ? "Online" : "Offline" },
+        { name: "Notification Queue", value: `${Math.floor(Math.random() * 10)} pending` }
+      ]);
+    };
+
+    fetchStats();
+    fetchRecentTickets();
+    fetchSystemHealth();
+
+    // Update data every 30 seconds
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchRecentTickets();
+      fetchSystemHealth();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const getPriorityColor = (priority) => {
@@ -87,7 +115,10 @@ const HomePage = () => {
     switch (status) {
       case "Normal":
       case "Active":
-      case "Online": return "bg-black text-white dark:bg-white dark:text-black";
+      case "Online": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "Warning": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "Inactive":
+      case "Offline": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
   };
