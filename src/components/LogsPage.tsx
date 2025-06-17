@@ -8,53 +8,55 @@ import LogViewer from "./LogViewer";
 import SeverityFilter from "./SeverityFilter";
 import TicketModal from "./TicketModal";
 
+interface LogEntry {
+  machine_id: string;
+  log: string;
+  timestamp: string;
+  severity: string;
+  source?: string;
+}
+
 const LogsPage = () => {
-  const [logs, setLogs] = useState([]);
-  const [filteredLogs, setFilteredLogs] = useState([]);
-  const [selectedMachine, setSelectedMachine] = useState("all");
-  const [selectedSeverity, setSelectedSeverity] = useState("all");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [filteredLogs, setFilteredLogs] = useState<LogEntry[]>([]);
+  const [selectedMachine, setSelectedMachine] = useState<string>("all");
+  const [selectedSeverity, setSelectedSeverity] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
-  const [machines, setMachines] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const wsRef = useRef(null);
+  const [machines, setMachines] = useState<string[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    // Connect to WebSocket for real-time logs
     const connectWebSocket = () => {
       const ws = new WebSocket('ws://localhost:8000/ws/logs');
       wsRef.current = ws;
 
       ws.onopen = () => {
         console.log('Connected to log stream');
-        setIsConnected(true);
       };
 
       ws.onmessage = (event) => {
-        try {
-          const logEntry = JSON.parse(event.data);
-          setLogs(prev => [logEntry, ...prev].slice(0, 1000));
-          
-          setMachines(prev => {
-            if (!prev.includes(logEntry.machine_id)) {
-              return [...prev, logEntry.machine_id];
-            }
-            return prev;
-          });
-        } catch (error) {
-          console.error('Error parsing log data:', error);
-        }
+        const logEntry: LogEntry = JSON.parse(event.data);
+        setLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000 logs
+        
+        // Update machines list
+        setMachines(prev => {
+          if (!prev.includes(logEntry.machine_id)) {
+            return [...prev, logEntry.machine_id];
+          }
+          return prev;
+        });
       };
 
       ws.onclose = () => {
         console.log('WebSocket connection closed, attempting to reconnect...');
-        setIsConnected(false);
         setTimeout(connectWebSocket, 3000);
       };
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setIsConnected(false);
       };
     };
 
@@ -88,12 +90,12 @@ const LogsPage = () => {
     setFilteredLogs(filtered);
   }, [logs, selectedMachine, selectedSeverity, searchTerm]);
 
-  const handleLogClick = (log) => {
+  const handleLogClick = (log: LogEntry) => {
     setSelectedLog(log);
     setShowTicketModal(true);
   };
 
-  const handleCreateTicket = async (ticketData) => {
+  const handleCreateTicket = async (ticketData: any) => {
     try {
       const response = await fetch('http://localhost:8000/create-ticket', {
         method: 'POST',
@@ -124,44 +126,34 @@ const LogsPage = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white text-gray-900 mb-2">Log Explorer</h1>
-          <p className="dark:text-slate-400 text-gray-600">Real-time log monitoring across all systems</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Log Explorer</h1>
+          <p className="text-slate-400">Real-time log monitoring across all systems</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-            isConnected 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-          </div>
-          <div className="text-sm dark:text-slate-400 text-gray-600">
-            {filteredLogs.length} logs displayed
-          </div>
+        <div className="text-sm text-slate-400">
+          {filteredLogs.length} logs displayed
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 dark:bg-slate-800/50 bg-gray-50 dark:border-slate-700 border-gray-200">
+      <Card className="p-4 bg-slate-800/50 border-slate-700">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm dark:text-slate-400 text-gray-600 mb-2">Search</label>
+            <label className="block text-sm text-slate-400 mb-2">Search</label>
             <Input
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="dark:bg-slate-700 bg-white dark:border-slate-600 border-gray-300 dark:text-white text-gray-900"
+              className="bg-slate-700 border-slate-600 text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm dark:text-slate-400 text-gray-600 mb-2">Machine</label>
+            <label className="block text-sm text-slate-400 mb-2">Machine</label>
             <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-              <SelectTrigger className="dark:bg-slate-700 bg-white dark:border-slate-600 border-gray-300 dark:text-white text-gray-900">
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                 <SelectValue placeholder="Select machine" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-slate-700 bg-white dark:border-slate-600 border-gray-300">
+              <SelectContent className="bg-slate-700 border-slate-600">
                 <SelectItem value="all">All Machines</SelectItem>
                 {machines.map(machine => (
                   <SelectItem key={machine} value={machine}>{machine}</SelectItem>
@@ -171,7 +163,7 @@ const LogsPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm dark:text-slate-400 text-gray-600 mb-2">Severity</label>
+            <label className="block text-sm text-slate-400 mb-2">Severity</label>
             <SeverityFilter value={selectedSeverity} onChange={setSelectedSeverity} />
           </div>
 
@@ -183,7 +175,7 @@ const LogsPage = () => {
                 setSearchTerm("");
               }}
               variant="outline"
-              className="dark:bg-slate-700 bg-gray-100 dark:border-slate-600 border-gray-300 dark:text-slate-300 text-gray-700 dark:hover:bg-slate-600 hover:bg-gray-200"
+              className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
             >
               Clear Filters
             </Button>
@@ -192,7 +184,7 @@ const LogsPage = () => {
       </Card>
 
       {/* Log Viewer */}
-      <Card className="dark:bg-slate-800/50 bg-gray-50 dark:border-slate-700 border-gray-200">
+      <Card className="bg-slate-800/50 border-slate-700">
         <LogViewer logs={filteredLogs} onLogClick={handleLogClick} />
       </Card>
 

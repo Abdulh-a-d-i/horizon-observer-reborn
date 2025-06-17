@@ -6,7 +6,11 @@ import LogsPage from "./LogsPage";
 import TicketsPage from "./TicketsPage";
 import VisualizationPage from "./VisualizationPage";
 
-const Dashboard = ({ onLogout }) => {
+interface DashboardProps {
+  onLogout: () => void;
+}
+
+const Dashboard = ({ onLogout }: DashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderContent = () => {
@@ -25,7 +29,7 @@ const Dashboard = ({ onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-900">
       <NavBar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
       <main className="pt-16">
         {renderContent()}
